@@ -1,0 +1,60 @@
+Qu'est-ce qu'un "item d'urgence" en ophtalmologie ?
+Un item d'urgence est une affection dont la prise en charge optimale nécessite un délai plus court que celui d'une programmation courante, sous peine d'impacter négativement le pronostic visuel, esthétique, de confort ou vital du patient.
+
+Quelle est la différence entre une "demande de soins non programmés" (DSNP) et un "item d'urgence" ?
+Une DSNP est une demande subjective du patient ou d'un tiers pour une consultation rapide, tandis qu'un item d'urgence est une affection objectivement reconnue comme nécessitant une prise en charge immédiate par un professionnel de santé.
+
+Quels sont les quatre pronostics à considérer pour une urgence ophtalmologique ?
+Les pronostics vital, visuel, de confort et esthétique.
+
+Quelle est la définition du "secours d'urgence" selon le Code de la santé publique ?
+Le secours d'urgence consiste à assurer le transport des patients en détresse vers l'établissement le plus proche offrant des moyens adaptés à leur état, tout en respectant le libre choix du patient.
+
+Quelle est la différence entre la "permanence des soins" et la "continuité des soins" ?
+La permanence des soins concerne l'accueil et la prise en charge de nouveaux patients en dehors des heures ouvrables, tandis que la continuité des soins assure le suivi des patients déjà pris en charge pendant ces mêmes périodes.
+
+Quels sont les quatre grands groupes de symptômes motivant une DSNP en ophtalmologie ?
+Les altérations visuelles, les dysesthésies, les modifications morphologiques et les symptômes locorégionaux/généraux.
+
+Pourquoi est-il important de quantifier la sévérité d'une urgence ophtalmologique ?
+Cela permet d'organiser le triage, d'adapter la prise en charge, d'améliorer la qualité des soins et de standardiser les pratiques pour la recherche clinique.
+
+Quels sont les deux aspects principaux de la sévérité d'une urgence ?
+Les aspects médicaux (délai de prise en charge, pronostic fonctionnel, etc.) et psychosociaux (qualité de vie, impact socio-professionnel, etc.).
+
+Comment le patient évalue-t-il généralement la sévérité de son urgence ?
+Le patient évalue la sévérité subjectivement, souvent en sous-estimant sa gravité, et se base sur son ressenti (douleur, inquiétude, pronostic perçu).
+
+Quel outil permet de quantifier la sévérité des urgences ophtalmologiques de manière consensuelle ?
+Le score BaSe SCOFE (BAsic Severity Score for Common Ocular Emergencies), fondé sur une approche d'experts.
+
+Quelle est la définition d'une "urgence vitale" en ophtalmologie ?
+Une situation clinique qui menace la vie du patient à court terme, nécessitant une intervention immédiate (délai inférieur à une minute).
+
+Citez deux exemples d'urgences neuro-ophtalmologiques vitales.
+La dissection carotidienne et la maladie de Horton.
+
+Pourquoi les cellulites orbitaires sont-elles considérées comme des urgences vitales ?
+En raison d'un taux de mortalité estimé à 5 % en l'absence de traitement rapide.
+
+Quelle est la première mesure à prendre en cas de brûlure chimique oculaire ?
+Un lavage oculaire immédiat pour réduire la surface de contact avec l'agent toxique.
+
+Pourquoi une crise aiguë de fermeture de l'angle (CAFA) nécessite-t-elle une prise en charge urgente ?
+En raison du risque d'ischémie rétinienne et de lésions irréversibles des cellules ganglionnaires, avec un taux de cécité élevé en cas de retard.
+
+Quel est le délai maximal recommandé pour la prise en charge d'une infection oculaire bactérienne ?
+Moins de 120 minutes après les prélèvements bactériologiques.
+
+Pourquoi les traumatismes oculaires ouverts doivent-ils être opérés dans les 24 heures ?
+Pour éviter des adhérences irréversibles, réduire les risques d'endophtalmie et d'ophtalmie sympathique.
+
+Quel est l'enjeu d'un retard de traitement dans un rejet de greffe de cornée ?
+La perte définitive de l'endothélium, entraînant une opacification du greffon.
+
+Pourquoi les kératites infectieuses sont-elles des urgences ?
+En raison de la destruction rapide des tissus cornéens par l'infection et l'inflammation, pouvant conduire à une perforation en quelques heures.
+
+Quel est le rôle du personnel non médical dans le triage des urgences ophtalmologiques ?
+Il évalue la sévérité perçue, oriente les patients vers les soignants adaptés et applique des protocoles pour prioriser les cas critiques.
+

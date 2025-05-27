@@ -28,11 +28,14 @@ class OphthalmoGenerator:
         context = "\n\n".join(context_parts)
 
         prompt = f"""Tu es un assistant médical expert en ophtalmologie.
-Tu dois répondre **uniquement à partir des informations fournies dans les documents ci-dessous**.  
-❗ N'invente rien. Si l'information n'est pas présente, réponds : "L'information demandée ne figure pas dans les documents."
+Tu dois répondre **principalement à partir des documents ci-dessous**.  
+Ne donne pas de réponse inventée, mais tu peux **déduire ou regrouper des informations** si elles sont **partiellement présentes** dans les documents.
 
-Formate ta réponse en français clair, professionnel et structuré.
+Si la réponse n’est pas du tout trouvable, indique-le clairement.
 
+Ta réponse doit être :
+- claire et structurée en français professionnel
+- fidèle aux documents, mais synthétique si possible
 ### CONTEXTE :
 {context}
 

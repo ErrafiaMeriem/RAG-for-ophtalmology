@@ -21,8 +21,12 @@ import clip
 
 
 class DocumentIngestor:
-    def __init__(self, vector_db_path="./vectordb", reset_db=False):
+    def __init__(self, vector_db_path="./vectordb", reset_db=False, collection_name="multimodal_content"):
         print("Initialisation de l'ingesteur CLIP multimodal...")
+        
+        
+          # Stocker le nom de collection
+        self.collection_name = collection_name 
         
         # Option pour réinitialiser la base
         if reset_db and os.path.exists(vector_db_path):
@@ -59,8 +63,8 @@ class DocumentIngestor:
         
         # Splitter optimisé
         self.text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=1000,
-            chunk_overlap=200,
+            chunk_size=1200,
+            chunk_overlap=300,
             separators=["\n\n", "\n", ". ", "? ", "! ", " "],
             length_function=len,
         )
@@ -73,35 +77,73 @@ class DocumentIngestor:
     
     def setup_collection(self):
         """Configure une seule collection pour tout le contenu multimodal"""
-        collection_name = "multimodal_content"
-        
         try:
             existing_collections = self.client.list_collections()
             existing_names = [c.name for c in existing_collections]
             
-            if collection_name in existing_names:
-                print(f"Collection '{collection_name}' trouvée")
-                self.collection = self.client.get_collection(collection_name)
+            print(f"Collections existantes: {existing_names}")
+            
+            if self.collection_name in existing_names:
+                print(f"Collection '{self.collection_name}' trouvée")
+                self.collection = self.client.get_collection(self.collection_name)
             else:
-                print(f"Création de la collection multimodale '{collection_name}'")
+                print(f"Création de la collection multimodale '{self.collection_name}'")
                 self.collection = self.client.create_collection(
-                    name=collection_name,
+                    name=self.collection_name,
                     metadata={"hnsw:space": "cosine", "description": "Contenu multimodal avec CLIP"}
                 )
-                
+                 
         except Exception as e:
             print(f"Erreur avec la collection: {e}")
+            # En cas d'erreur, tenter de supprimer et recréer
             try:
-                self.client.delete_collection(collection_name)
-            except:
-                pass
+                print(f"Tentative de suppression de la collection '{self.collection_name}'...")
+                self.client.delete_collection(self.collection_name)
+                print("Collection supprimée")
+            except Exception as delete_error:
+                print(f"Erreur lors de la suppression: {delete_error}")
+            
+            print(f"Création d'une nouvelle collection '{self.collection_name}'...")
             self.collection = self.client.create_collection(
-                name=collection_name,
+                name=self.collection_name,
                 metadata={"hnsw:space": "cosine", "description": "Contenu multimodal avec CLIP"}
             )
-        
         print("✓ Collection multimodale configurée")
     
+    def list_collections(self):
+        """Liste toutes les collections disponibles"""
+        try:
+            collections = self.client.list_collections()
+            print("Collections disponibles:")
+            for i, collection in enumerate(collections):
+                count = collection.count()
+                print(f"  {i+1}. {collection.name} ({count} éléments)")
+            return collections
+        except Exception as e:
+            print(f"Erreur lors du listage des collections: {e}")
+            return []
+    
+    def get_collection_info(self):
+        """Affiche les informations de la collection actuelle"""
+        try:
+            count = self.collection.count()
+            print(f"Collection '{self.collection_name}': {count} éléments")
+            
+            # Obtenir quelques exemples pour voir les types de contenu
+            if count > 0:
+                sample = self.collection.get(limit=5)
+                if sample['metadatas']:
+                    content_types = {}
+                    for metadata in sample['metadatas']:
+                        content_type = metadata.get('content_type', 'unknown')
+                        content_types[content_type] = content_types.get(content_type, 0) + 1
+                    
+                    print("Types de contenu dans la collection:")
+                    for content_type, count in content_types.items():
+                        print(f"  - {content_type}: {count}+ éléments")
+            
+        except Exception as e:
+            print(f"Erreur lors de la récupération des infos: {e}")
     def get_clip_embedding(self, content, content_type="text"):
         """Génère un embedding CLIP selon le type de contenu"""
         try:
@@ -198,6 +240,76 @@ class DocumentIngestor:
         lines = [line.strip() for line in text.split('\n') if len(line.strip()) > 10]
         
         return '\n'.join(lines).strip()
+    
+    def process_docs(self, docs_folder: str):
+        """Traite les fichiers .txt du dossier docs"""
+        documents = []
+        
+        if not os.path.exists(docs_folder):
+            print(f"Dossier {docs_folder} non trouvé")
+            return documents
+            
+        txt_files = [f for f in os.listdir(docs_folder) if f.endswith('.txt')]
+        print(f"Traitement de {len(txt_files)} fichiers texte...")
+        
+        for filename in txt_files:
+            try:
+                print(f"Traitement de {filename}...")
+                file_path = os.path.join(docs_folder, filename)
+                
+                # Lire le contenu du fichier texte
+                with open(file_path, 'r', encoding='utf-8') as file:
+                    content = file.read()
+                
+                # Nettoyer le texte
+                cleaned_content = self.clean_text(content)
+                
+                if cleaned_content.strip():
+                    # Créer un document similaire aux PDFs
+                    doc = type("Doc", (), {
+                        "page_content": cleaned_content,
+                        "metadata": {
+                            "source": filename,
+                            "file_type": "txt",
+                            "content_type": "text",
+                            "file_size": len(content),
+                            "char_count": len(cleaned_content)
+                        }
+                    })
+                    documents.append(doc)
+                    print(f"  ✓ Texte extrait: {len(cleaned_content)} caractères")
+                else:
+                    print(f"  ⚠️ Fichier vide ou sans contenu substantiel: {filename}")
+                    
+            except UnicodeDecodeError:
+                # Essayer avec d'autres encodages
+                try:
+                    with open(file_path, 'r', encoding='latin-1') as file:
+                        content = file.read()
+                    cleaned_content = self.clean_text(content)
+                    
+                    if cleaned_content.strip():
+                        doc = type("Doc", (), {
+                            "page_content": cleaned_content,
+                            "metadata": {
+                                "source": filename,
+                                "file_type": "txt",
+                                "content_type": "text",
+                                "encoding": "latin-1",
+                                "file_size": len(content),
+                                "char_count": len(cleaned_content)
+                            }
+                        })
+                        documents.append(doc)
+                        print(f"  ✓ Texte extrait (latin-1): {len(cleaned_content)} caractères")
+                    
+                except Exception as e:
+                    print(f"  ⚠️ Erreur d'encodage pour {filename}: {e}")
+                    
+            except Exception as e:
+                print(f"Erreur avec {filename}: {e}")
+                
+        return documents
     
     def extract_images_from_pdf(self, pdf_path: str, filename: str) -> List[Dict]:
         """Extrait et analyse les images d'un PDF"""
@@ -415,8 +527,17 @@ class DocumentIngestor:
         print("\n📄 TRAITEMENT DES PDFs...")
         pdf_docs, images, tables = self.process_pdfs('./data/pdfs')
         
+        # Traiter les fichiers .txt
+        print("\n📝 TRAITEMENT DES FICHIERS TEXTE...")
+        txt_docs = self.process_docs('./data/docs')
+        
+        # Combiner tous les documents texte
+        all_text_docs = pdf_docs + txt_docs
+        
         print(f"\n📊 RÉSUMÉ:")
         print(f"  Documents texte: {len(pdf_docs)}")
+        print(f"  Documents TXT: {len(txt_docs)}")
+        print(f"  Total documents texte: {len(all_text_docs)}")
         print(f"  Images: {len(images)}")
         print(f"  Tableaux: {len(tables)}")
         
@@ -429,9 +550,9 @@ class DocumentIngestor:
         
         all_items = []
         
-        # 1. Traiter le texte
-        if pdf_docs:
-            chunks = self.text_splitter.split_documents(pdf_docs)
+        # 1. Traiter le texte (PDF + TXT)
+        if all_text_docs:
+            chunks = self.text_splitter.split_documents(all_text_docs)
             print(f"Chunks texte: {len(chunks)}")
             
             for i, chunk in enumerate(chunks):
@@ -613,13 +734,23 @@ if __name__ == "__main__":
     parser.add_argument('--search', type=str, help='Recherche')
     parser.add_argument('--types', nargs='+', choices=['text', 'image', 'table'], 
                        help='Types de contenu à rechercher')
+    parser.add_argument('--collection', type=str, default='multimodal_content',
+                       help='Nom de la collection (défaut: multimodal_content)')
+    parser.add_argument('--list', action='store_true', help='Lister les collections')
+    parser.add_argument('--info', action='store_true', help='Infos sur la collection')
     
     args = parser.parse_args()
     
     # Initialiser l'ingesteur CLIP
-    ingestor = DocumentIngestor(reset_db=args.reset)
+    ingestor = DocumentIngestor(reset_db=args.reset,collection_name=args.collection)
     
-    if args.search:
+    if args.list:
+         # Lister les collections
+        ingestor.list_collections()
+    elif args.info:
+        # Infos sur la collection
+        ingestor.get_collection_info()
+    elif args.search:
         # Mode recherche
         results = ingestor.search(args.search, content_types=args.types)
         

@@ -3,14 +3,39 @@ from langchain_huggingface import HuggingFaceEmbeddings
 import re
 from collections import defaultdict
 import numpy as np
+from .config import MultimodalConfig
+from transformers import CLIPProcessor, CLIPModel
+import torch
 
 class OphthalmoRetriever:
-    def __init__(self, vector_db_path="./vectordb"):
-        self.client = chromadb.PersistentClient(path=vector_db_path)
-        self.collection = self.client.get_collection(name="ophtalmo_docs")
-        self.embeddings = HuggingFaceEmbeddings(
-            model_name="sentence-transformers/all-MiniLM-L6-v2"
-        )
+    def __init__(self, vector_db_path="./vectordb",model_name: str = "openai/clip-vit-base-patch32"):
+        try:
+            # Initialiser ChromaDB
+            self.client = chromadb.PersistentClient(path=vector_db_path)
+            
+            try:
+                self.collection = self.client.get_collection(name="multimodal_content")
+                print("✅ Collection multimodale récupérée")
+            except:
+                # Créer la collection si elle n'existe pas
+                self.collection = self.client.create_collection(
+                    name="multimodal_content",
+                    metadata={"hnsw:space": "cosine", "model": MultimodalConfig.CLIP_MODEL_NAME}
+                )
+                print("✅ Collection multimodale créée")
+            
+            # Charger le modèle CLIP pour embeddings multimodaux
+            self.clip_model = CLIPModel.from_pretrained(MultimodalConfig.CLIP_MODEL_NAME)
+            self.clip_processor = CLIPProcessor.from_pretrained(MultimodalConfig.CLIP_MODEL_NAME)
+            
+            print(f"📦 Modèle CLIP chargé: {MultimodalConfig.CLIP_MODEL_NAME}")
+            print(f"📏 Dimensions: {MultimodalConfig.EMBEDDING_DIMENSIONS}")
+            
+            # Mettre en mode évaluation
+            self.clip_model.eval()
+            
+        except Exception as e:
+            raise Exception(f"Erreur initialisation retriever multimodal: {e}")
     
     def preprocess_query(self, query):
         """Préprocesse la requête pour améliorer la recherche"""
@@ -237,8 +262,12 @@ class OphthalmoRetriever:
         if exact_phrases:
             print(f"🎯 Expressions exactes recherchées: {exact_phrases}")
         
-        # Créer l'embedding de la requête
-        query_embedding = self.embeddings.embed_query(processed_query)
+        # Extraire l'embedding de la requête
+        with torch.no_grad():
+            inputs = self.clip_processor(text=processed_query, return_tensors="pt", padding=True, truncation=True)
+            query_embedding = self.clip_model.get_text_features(**inputs).squeeze().numpy()
+
+
         
         # Recherche sémantique standard
         semantic_results = self.collection.query(
@@ -667,7 +696,11 @@ class OphthalmoRetriever:
     def debug_embedding_similarity(self, query, top_n=3):
         """Fonction de debug pour analyser les similarités d'embeddings"""
         processed_query = self.preprocess_query(query)
-        query_embedding = self.embeddings.embed_query(processed_query)
+        with torch.no_grad():
+            inputs = self.clip_processor(text=processed_query, return_tensors="pt", padding=True, truncation=True)
+            query_embedding = self.clip_model.get_text_features(**inputs).squeeze().numpy()
+
+
         
         results = self.collection.query(
             query_embeddings=[query_embedding],
